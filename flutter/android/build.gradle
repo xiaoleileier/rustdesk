@@ -28,6 +28,15 @@ subprojects {
                     }
                 }
             }
+            // AGP 8 rejects mismatched Java(1.8)/Kotlin(17) targets in old
+            // plugins. Force Java to 17 to match Kotlin.
+            androidExt.compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
+            }
+        }
+        project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+            kotlinOptions { jvmTarget = "17" }
         }
     }
     project.evaluationDependsOn(':app')
