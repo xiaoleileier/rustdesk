@@ -14,6 +14,27 @@ subprojects {
     project.evaluationDependsOn(':app')
 }
 
+// AGP 8 requires every Android module to declare a namespace. Some older Flutter
+// plugins (e.g. external_path) only set the manifest `package` attribute, which
+// AGP 8 ignores -> inject the namespace from that package so they keep building.
+subprojects {
+    afterEvaluate { project ->
+        if (project.extensions.findByName("android") != null) {
+            def androidExt = project.extensions.getByName("android")
+            if (androidExt.namespace == null) {
+                def manifestFile = androidExt.sourceSets.main.manifest.srcFile
+                if (manifestFile.exists()) {
+                    def pkg = new groovy.xml.XmlSlurper()
+                        .parse(manifestFile).@package.text()
+                    if (pkg != null && !pkg.isEmpty()) {
+                        androidExt.namespace = pkg
+                    }
+                }
+            }
+        }
+    }
+}
+
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
