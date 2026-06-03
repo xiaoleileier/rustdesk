@@ -10,7 +10,6 @@ on:
     branches: [master]
     paths-ignore:
       - "**.md"
-      - ".github/workflows/**"
 
 env:
   FLUTTER_VERSION: "3.38.8"
@@ -130,11 +129,14 @@ jobs:
       - name: Install system deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y nasm yasm libgtk-3-dev libxcb-randr0-dev libxdo-dev \
-            libxfixes-dev libxcb-shape0-dev libxcb-xfixes0-dev libasound2-dev libpulse-dev \
-            libpam0g-dev libclang-dev ninja-build libappindicator3-dev pkg-config \
-            gstreamer1.0-plugins-base libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
-            libva-dev libvdpau-dev
+          sudo apt-get install -y \
+            clang cmake curl gcc-multilib git g++ g++-multilib \
+            libayatana-appindicator3-dev libasound2-dev libc6-dev libclang-dev \
+            libunwind-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            libgtk-3-dev libpam0g-dev libpulse-dev libva-dev \
+            libxcb-randr0-dev libxcb-shape0-dev libxcb-xfixes0-dev \
+            libxdo-dev libxfixes-dev llvm-dev nasm ninja-build \
+            openjdk-17-jdk-headless pkg-config tree wget yasm
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ env.RUST_VERSION }}
