@@ -41,7 +41,7 @@ jobs:
         with:
           toolchain: ${{ env.RUST_VERSION }}
           components: rustfmt
-          targets: aarch64-apple-darwin
+          targets: aarch64-apple-darwin, x86_64-apple-darwin
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -51,32 +51,41 @@ jobs:
         with:
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
           doNotCache: false
-      - name: Install vcpkg deps
-        run: $VCPKG_ROOT/vcpkg install --x-install-root="$VCPKG_ROOT/installed"
+      - name: Install vcpkg deps (both arches for universal)
+        run: |
+          $VCPKG_ROOT/vcpkg install --triplet arm64-osx --x-install-root="$VCPKG_ROOT/installed"
+          $VCPKG_ROOT/vcpkg install --triplet x64-osx --x-install-root="$VCPKG_ROOT/installed"
       - name: Generate bridge
         run: |
           (cd flutter && flutter pub get)
           cargo install flutter_rust_bridge_codegen --version ${{ env.FLUTTER_RUST_BRIDGE_VERSION }} --features uuid --locked
           ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
-      - name: Build app
+      - name: Build universal app (arm64 + x86_64)
         env:
           VCPKG_ROOT: ${{ env.VCPKG_ROOT }}
-          # Runner is Apple Silicon; cargo builds an arm64 dylib, so force the
-          # Flutter/Xcode build to arm64 only (release otherwise also builds x86_64
-          # and fails to link the arm64-only dylib).
-          FLUTTER_XCODE_ARCHS: arm64
         run: |
-          cargo build --locked --features flutter --release
+          # Build the Rust dylib for both arches, then lipo into a fat dylib so
+          # the universal Flutter/Xcode build links on both Apple Silicon & Intel.
+          cargo build --locked --features flutter --release --target aarch64-apple-darwin
+          cargo build --locked --features flutter --release --target x86_64-apple-darwin
+          mkdir -p target/release
+          lipo -create \
+            target/aarch64-apple-darwin/release/liblibrustdesk.dylib \
+            target/x86_64-apple-darwin/release/liblibrustdesk.dylib \
+            -output target/release/liblibrustdesk.dylib
           cp target/release/liblibrustdesk.dylib target/release/librustdesk.dylib
+          # No FLUTTER_XCODE_ARCHS => Flutter builds arm64 + x86_64 (universal).
           pushd flutter && flutter build macos --release && popd
-          ditto -c -k --keepParent "flutter/build/macos/Build/Products/Release/gfyc.app" gfyc-macos-arm64.zip
+          ditto -c -k --keepParent "flutter/build/macos/Build/Products/Release/gfyc.app" gfyc-macos-universal.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: gfyc-macos-arm64
-          path: gfyc-macos-arm64.zip
+          name: gfyc-macos-universal
+          path: gfyc-macos-universal.zip
 
   # ---------------------------------------------------------------- Windows
   windows:
+    # Skipped only for commits tagged [mac-android-only]; normal commits build it.
+    if: ${{ !contains(github.event.head_commit.message, '[mac-android-only]') }}
     runs-on: windows-2022
     steps:
       - uses: actions/github-script@v7
@@ -130,6 +139,8 @@ jobs:
 
   # ---------------------------------------------------------------- Linux
   linux:
+    # Skipped only for commits tagged [mac-android-only]; normal commits build it.
+    if: ${{ !contains(github.event.head_commit.message, '[mac-android-only]') }}
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/github-script@v7
