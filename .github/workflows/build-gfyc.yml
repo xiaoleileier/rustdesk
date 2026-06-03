@@ -78,11 +78,15 @@ jobs:
           cp target/release/liblibrustdesk.dylib target/release/librustdesk.dylib
           # No FLUTTER_XCODE_ARCHS => Flutter builds arm64 + x86_64 (universal).
           pushd flutter && flutter build macos --release && popd
-          ditto -c -k --keepParent "flutter/build/macos/Build/Products/Release/gfyc.app" gfyc-macos-universal.zip
+          # Build a .dmg with a drag-to-Applications shortcut (hdiutil, no extra tools).
+          rm -rf dmgroot && mkdir -p dmgroot
+          cp -R "flutter/build/macos/Build/Products/Release/gfyc.app" dmgroot/
+          ln -s /Applications dmgroot/Applications
+          hdiutil create -volname "gfyc" -srcfolder dmgroot -ov -format UDZO gfyc-macos-universal.dmg
       - uses: actions/upload-artifact@v4
         with:
           name: gfyc-macos-universal
-          path: gfyc-macos-universal.zip
+          path: gfyc-macos-universal.dmg
 
   # ---------------------------------------------------------------- Windows
   windows:
@@ -163,7 +167,7 @@ jobs:
             libgtk-3-dev libpam0g-dev libpulse-dev libva-dev \
             libxcb-randr0-dev libxcb-shape0-dev libxcb-xfixes0-dev \
             libxdo-dev libxfixes-dev llvm-dev nasm ninja-build \
-            openjdk-17-jdk-headless pkg-config tree wget yasm
+            openjdk-17-jdk-headless pkg-config tree wget yasm python3-pip
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ env.RUST_VERSION }}
@@ -184,14 +188,33 @@ jobs:
           (cd flutter && flutter pub get)
           cargo install flutter_rust_bridge_codegen --version ${{ env.FLUTTER_RUST_BRIDGE_VERSION }} --features uuid --locked
           ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
-      - name: Build app
+      - name: Build app (.deb)
         env:
           VCPKG_ROOT: ${{ env.VCPKG_ROOT }}
         run: python3 build.py --flutter --hwcodec
+      - name: Build .rpm (from .deb via alien, best-effort)
+        run: |
+          sudo apt-get install -y alien || true
+          sudo alien -r -k --scripts rustdesk-*.deb || true
+          ls *.rpm || true
+      - name: Build AppImage (best-effort)
+        run: |
+          set +e
+          sudo apt-get install -y libfuse2 libarchive-tools
+          sudo pip3 install git+https://github.com/rustdesk-org/appimage-builder.git
+          cp rustdesk-*.deb appimage/rustdesk.deb
+          pushd appimage
+          sudo appimage-builder --skip-tests --recipe ./AppImageBuilder-x86_64.yml
+          popd
+          mv appimage/*.AppImage . 2>/dev/null || true
+          ls *.AppImage || true
       - uses: actions/upload-artifact@v4
         with:
           name: gfyc-linux-x64
-          path: rustdesk-*.deb
+          path: |
+            rustdesk-*.deb
+            *.rpm
+            *.AppImage
 
   # ---------------------------------------------------------------- Android (APK)
   android:
