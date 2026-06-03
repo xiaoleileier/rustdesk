@@ -254,7 +254,6 @@ jobs:
           # Native libs for android are built by flutter/build_android.sh; this
           # may need vcpkg android deps — see flutter/build_android_deps.sh.
           pushd flutter
-          flutter pub get
           flutter build apk --release --target-platform android-arm64 --split-per-abi
           popd
       - uses: actions/upload-artifact@v4
