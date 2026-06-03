@@ -61,16 +61,19 @@ jobs:
       - name: Build app
         env:
           VCPKG_ROOT: ${{ env.VCPKG_ROOT }}
+          # Runner is Apple Silicon; cargo builds an arm64 dylib, so force the
+          # Flutter/Xcode build to arm64 only (release otherwise also builds x86_64
+          # and fails to link the arm64-only dylib).
+          FLUTTER_XCODE_ARCHS: arm64
         run: |
           cargo build --locked --features flutter --release
           cp target/release/liblibrustdesk.dylib target/release/librustdesk.dylib
           pushd flutter && flutter build macos --release && popd
-          create-dmg --overwrite "flutter/build/macos/Build/Products/Release/gfyc.app" . || true
-          mkdir -p dist && cp -rf flutter/build/macos/Build/Products/Release/gfyc.app dist/ && (mv *.dmg dist/ 2>/dev/null || true)
+          ditto -c -k --keepParent "flutter/build/macos/Build/Products/Release/gfyc.app" gfyc-macos-arm64.zip
       - uses: actions/upload-artifact@v4
         with:
           name: gfyc-macos-arm64
-          path: dist/
+          path: gfyc-macos-arm64.zip
 
   # ---------------------------------------------------------------- Windows
   windows:
@@ -184,6 +187,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ env.RUST_VERSION }}
