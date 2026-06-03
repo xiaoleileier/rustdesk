@@ -11,13 +11,10 @@ subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
 subprojects {
-    project.evaluationDependsOn(':app')
-}
-
-// AGP 8 requires every Android module to declare a namespace. Some older Flutter
-// plugins (e.g. external_path) only set the manifest `package` attribute, which
-// AGP 8 ignores -> inject the namespace from that package so they keep building.
-subprojects {
+    // AGP 8 requires every Android module to declare a namespace. Some older
+    // Flutter plugins (e.g. external_path) only set the manifest `package`
+    // attribute, which AGP 8 ignores -> inject the namespace from that package.
+    // Register this BEFORE evaluationDependsOn so the project isn't evaluated yet.
     afterEvaluate { project ->
         if (project.extensions.findByName("android") != null) {
             def androidExt = project.extensions.getByName("android")
@@ -33,6 +30,7 @@ subprojects {
             }
         }
     }
+    project.evaluationDependsOn(':app')
 }
 
 tasks.register("clean", Delete) {
