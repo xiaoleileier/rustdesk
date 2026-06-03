@@ -4,6 +4,10 @@
 # Trigger manually (Actions tab -> Run workflow) or on push to master.
 name: build-gfyc
 
+concurrency:
+  group: build-gfyc-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   workflow_dispatch:
   push:
@@ -96,14 +100,17 @@ jobs:
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
           doNotCache: false
       - name: Install vcpkg deps
+        shell: bash
         env:
           VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-static
-        run: $env:VCPKG_ROOT/vcpkg install --triplet x64-windows-static --x-install-root="$env:VCPKG_ROOT/installed"
+        run: "$VCPKG_ROOT/vcpkg install --triplet x64-windows-static --x-install-root=\"$VCPKG_ROOT/installed\""
       - name: Generate bridge
+        shell: bash
         run: |
           cargo install flutter_rust_bridge_codegen --version ${{ env.FLUTTER_RUST_BRIDGE_VERSION }} --features uuid --locked
-          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
+          "$HOME/.cargo/bin/flutter_rust_bridge_codegen" --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
       - name: Build app
+        shell: bash
         env:
           VCPKG_ROOT: ${{ env.VCPKG_ROOT }}
         run: python build.py --flutter --hwcodec
