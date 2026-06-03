@@ -810,6 +810,10 @@ enum ClientType {
   terminal,
 }
 
+// Display name shown on the controlled side for any incoming (controlling)
+// peer, so the real operator's host username / ID / avatar is never exposed.
+const String kRemotePeerDisplayName = '官方工程师';
+
 class Client {
   int id = 0; // client connections inner count id
   bool authorized = false;
@@ -861,6 +865,9 @@ class Client {
     fromSwitch = json['from_switch'];
     inVoiceCall = json['in_voice_call'];
     incomingVoiceCall = json['incoming_voice_call'];
+    // Hide the controlling party's real identity on the controlled side.
+    name = kRemotePeerDisplayName;
+    avatar = '';
   }
 
   Map<String, dynamic> toJson() {

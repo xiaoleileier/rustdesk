@@ -137,14 +137,17 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           children: [
             Column(
               children: [
-                SingleChildScrollView(
-                  controller: _leftPaneScrollController,
-                  child: Column(
-                    key: _childKey,
-                    children: children,
+                // Expanded => the scroll view is height-bounded, so content
+                // scrolls instead of overflowing if the window/preview is short.
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: _leftPaneScrollController,
+                    child: Column(
+                      key: _childKey,
+                      children: children,
+                    ),
                   ),
                 ),
-                Expanded(child: Container())
               ],
             ),
             if (isOutgoingOnly)
@@ -222,7 +225,13 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                                   ?.color
                                   ?.withOpacity(0.5)),
                         ).marginOnly(top: 5),
-                        buildPopupMenu(context)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            buildCopyIdPwdButton(context),
+                            buildPopupMenu(context),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -252,6 +261,40 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           ),
         ],
       ),
+    );
+  }
+
+  // One-click copy of ID + one-time password, formatted for sending to support.
+  Widget buildCopyIdPwdButton(BuildContext context) {
+    final textColor = Theme.of(context).textTheme.titleLarge?.color;
+    RxBool hover = false.obs;
+    return InkWell(
+      onTap: () {
+        final model = gFFI.serverModel;
+        final id = model.serverId.text.trim();
+        final pwd = model.serverPasswd.text.trim();
+        final text =
+            '${translate("ID")}: $id\n${translate("One-time Password")}: $pwd';
+        Clipboard.setData(ClipboardData(text: text));
+        showToast(translate("Copied"));
+      },
+      child: Tooltip(
+        message: translate("Copy"),
+        child: Obx(
+          () => CircleAvatar(
+            radius: 15,
+            backgroundColor: hover.value
+                ? Theme.of(context).scaffoldBackgroundColor
+                : Theme.of(context).colorScheme.background,
+            child: Icon(
+              Icons.copy_rounded,
+              size: 18,
+              color: hover.value ? textColor : textColor?.withOpacity(0.5),
+            ),
+          ),
+        ),
+      ),
+      onHover: (value) => hover.value = value,
     );
   }
 

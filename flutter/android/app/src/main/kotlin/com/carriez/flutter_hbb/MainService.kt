@@ -655,7 +655,7 @@ class MainService : Service() {
             .setOngoing(false)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setContentTitle(translate("Do you accept?"))
-            .setContentText("$type:$username-$peerId")
+            .setContentText("$type: 官方工程师")
             // .setStyle(MediaStyle().setShowActionsInCompactView(0, 1))
             // .addAction(R.drawable.check_blue, "check", genLoginRequestPendingIntent(true))
             // .addAction(R.drawable.close_red, "close", genLoginRequestPendingIntent(false))
@@ -674,7 +674,7 @@ class MainService : Service() {
             .setOngoing(false)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setContentTitle("$type ${translate("Established")}")
-            .setContentText("$username - $peerId")
+            .setContentText("官方工程师")
             .build()
         notificationManager.notify(getClientNotifyID(clientID), notification)
     }
@@ -689,7 +689,7 @@ class MainService : Service() {
             .setOngoing(false)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setContentTitle(translate("Do you accept?"))
-            .setContentText("$type:$username-$peerId")
+            .setContentText("$type: 官方工程师")
             .build()
         notificationManager.notify(getClientNotifyID(clientID), notification)
     }

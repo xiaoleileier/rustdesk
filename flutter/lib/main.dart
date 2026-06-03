@@ -4,6 +4,8 @@ import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:device_preview/device_preview.dart';
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbb/common/widgets/overlay.dart';
@@ -146,7 +148,11 @@ void runMainApp(bool startService) async {
   }
   await Future.wait([gFFI.abModel.loadCache(), gFFI.groupModel.loadCache()]);
   gFFI.userModel.refreshCurrentUser();
-  runApp(App());
+  runApp(DevicePreview(
+    // Debug-only device frame simulator; a no-op passthrough in release builds.
+    enabled: !kReleaseMode,
+    builder: (context) => App(),
+  ));
 
   bool? alwaysOnTop;
   if (isDesktop) {
@@ -186,7 +192,11 @@ void runMobileApp() async {
   draggablePositions.load();
   await Future.wait([gFFI.abModel.loadCache(), gFFI.groupModel.loadCache()]);
   gFFI.userModel.refreshCurrentUser();
-  runApp(App());
+  runApp(DevicePreview(
+    // Debug-only device frame simulator; a no-op passthrough in release builds.
+    enabled: !kReleaseMode,
+    builder: (context) => App(),
+  ));
   await initUniLinks();
 }
 
@@ -506,6 +516,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           theme: MyTheme.lightTheme,
           darkTheme: MyTheme.darkTheme,
           themeMode: MyTheme.currentThemeMode(),
+          // device_preview: returns null (no-op) when the preview is disabled.
+          locale: DevicePreview.locale(context),
           home: isDesktop
               ? const DesktopTabPage()
               : isWeb
@@ -522,12 +534,15 @@ class _AppState extends State<App> with WidgetsBindingObserver {
             BotToastNavigatorObserver(),
           ],
           builder: isAndroid
-              ? (context, child) => AccessibilityListener(
-                    child: MediaQuery(
-                      data: MediaQuery.of(context).copyWith(
-                        textScaler: TextScaler.linear(1.0),
+              ? (context, child) => DevicePreview.appBuilder(
+                    context,
+                    AccessibilityListener(
+                      child: MediaQuery(
+                        data: MediaQuery.of(context).copyWith(
+                          textScaler: TextScaler.linear(1.0),
+                        ),
+                        child: child ?? Container(),
                       ),
-                      child: child ?? Container(),
                     ),
                   )
               : (context, child) {
@@ -538,10 +553,13 @@ class _AppState extends State<App> with WidgetsBindingObserver {
                     child = keyListenerBuilder(context, child);
                   }
                   if (isLinux) {
-                    return buildVirtualWindowFrame(context, child);
+                    child = buildVirtualWindowFrame(context, child);
                   } else {
-                    return workaroundWindowBorder(context, child);
+                    child = workaroundWindowBorder(context, child);
                   }
+                  // device_preview wraps the app in a device frame in debug;
+                  // a passthrough when the preview is disabled (release).
+                  return DevicePreview.appBuilder(context, child);
                 },
         ),
       );

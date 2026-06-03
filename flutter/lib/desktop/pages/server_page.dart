@@ -129,7 +129,8 @@ class ConnectionManagerState extends State<ConnectionManager>
               gFFI.chatModel.showChatPage(MessageKey(client.peerId, client.id));
             });
           }
-          windowManager.setTitle(getWindowNameWithId(client.peerId));
+          // Use the masked display name instead of the peer ID in the window title.
+          windowManager.setTitle(client.name);
           gFFI.cmFileModel.updateCurrentClientId(client.id);
         }
       }
@@ -479,12 +480,7 @@ class _CmHeaderState extends State<_CmHeader>
                   ),
                   maxLines: 1,
                 )),
-                FittedBox(
-                  child: Text(
-                    "(${client.peerId})",
-                    style: TextStyle(color: Colors.white, fontSize: 14),
-                  ),
-                ),
+                // Peer ID hidden to avoid exposing the controlling party.
                 if (client.type_() == ClientType.terminal)
                   FittedBox(
                     child: Text(

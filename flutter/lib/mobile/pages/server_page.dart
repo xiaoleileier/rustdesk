@@ -875,8 +875,7 @@ class ClientInfo extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                     Text(client.name, style: const TextStyle(fontSize: 18)),
-                    const SizedBox(width: 8),
-                    Text(client.peerId, style: const TextStyle(fontSize: 10))
+                    // Peer ID hidden to avoid exposing the controlling party.
                   ]))
             ],
           ),

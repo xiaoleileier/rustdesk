@@ -39,6 +39,8 @@ lazy_static::lazy_static! {
 
 fn initialize(app_dir: &str, custom_client_config: &str) {
     flutter::async_tasks::start_flutter_async_runner();
+    // Rebrand: set the app name before config paths / app name are read.
+    *config::APP_NAME.write().unwrap() = "gfyc".to_owned();
     // `APP_DIR` is set in `main_get_data_dir_ios()` on iOS.
     #[cfg(not(target_os = "ios"))]
     {
@@ -63,6 +65,15 @@ fn initialize(app_dir: &str, custom_client_config: &str) {
         hbb_common::init_log(false, "");
         #[cfg(feature = "mediacodec")]
         scrap::mediacodec::check_mediacodec();
+        // Force "incoming only" (be-controlled) mode and start the remote
+        // config loader. On desktop this is done in `core_main`, but that does
+        // not run on Android, so do it here.
+        {
+            let mut hard = config::HARD_SETTINGS.write().unwrap();
+            hard.entry("conn-type".to_owned())
+                .or_insert_with(|| "incoming".to_owned());
+        }
+        crate::remote_config::init_and_start();
         crate::common::test_rendezvous_server();
         crate::common::test_nat_type();
     }

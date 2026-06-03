@@ -29,10 +29,23 @@ macro_rules! my_println{
 /// If it returns [`Some`], then the process will continue, and flutter gui will be started.
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn core_main() -> Option<Vec<String>> {
+    // Rebrand: set the app name before anything reads config paths / log dir / title.
+    *hbb_common::config::APP_NAME.write().unwrap() = "gfyc".to_owned();
     if !crate::common::global_init() {
         return None;
     }
     crate::load_custom_client();
+    // Force this build into "incoming only" (be-controlled) mode: the home page
+    // then hides the "control a remote device" pane and only shows the ID,
+    // one-time password and the ID/relay connection status.
+    {
+        let mut hard = hbb_common::config::HARD_SETTINGS.write().unwrap();
+        hard.entry("conn-type".to_owned())
+            .or_insert_with(|| "incoming".to_owned());
+    }
+    // Fetch the ID/relay/key (and optional API server) from a remote JSON
+    // document, then keep polling so they can be rotated centrally.
+    crate::remote_config::init_and_start();
     #[cfg(windows)]
     if !crate::platform::windows::bootstrap() {
         // return None to terminate the process
