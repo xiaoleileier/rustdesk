@@ -1,7 +1,7 @@
 allprojects {
     repositories {
         google()
-        jcenter()
+        mavenCentral() // jcenter() is dead (shut down 2021); mavenCentral has the same artifacts
         maven { url 'https://jitpack.io' }
     }
 }
