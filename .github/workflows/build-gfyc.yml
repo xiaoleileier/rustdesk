@@ -40,6 +40,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ env.RUST_VERSION }}
+          components: rustfmt
           targets: aarch64-apple-darwin
       - uses: subosito/flutter-action@v2
         with:
@@ -86,6 +87,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ env.RUST_VERSION }}
+          components: rustfmt
           targets: x86_64-pc-windows-msvc
       - name: Install LLVM
         uses: KyleMayes/install-llvm-action@v2
@@ -149,6 +151,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ env.RUST_VERSION }}
+          components: rustfmt
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -184,6 +187,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ env.RUST_VERSION }}
+          components: rustfmt
           targets: aarch64-linux-android, armv7-linux-androideabi
       - uses: nttld/setup-ndk@v1
         id: setup-ndk
