@@ -270,7 +270,9 @@ jobs:
           ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: |
           cargo install cargo-ndk --version ${{ env.CARGO_NDK_VERSION }} --locked
-          ./flutter/ndk_arm64.sh
+          # Build without hwcodec: its build.rs cross-compile picks host headers
+          # and fails; software codecs (vp9/aom) work fine for the controlled side.
+          cargo ndk --platform 21 --target aarch64-linux-android build --release --features flutter
           mkdir -p ./flutter/android/app/src/main/jniLibs/arm64-v8a
           cp ./target/aarch64-linux-android/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/arm64-v8a/librustdesk.so
           cp "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" ./flutter/android/app/src/main/jniLibs/arm64-v8a/
