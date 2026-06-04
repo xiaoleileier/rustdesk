@@ -12,7 +12,6 @@ import path_provider_foundation
 import screen_retriever
 import sqflite
 // import tray_manager
-import uni_links_desktop
 import url_launcher_macos
 import wakelock_plus
 import window_manager
@@ -60,7 +59,6 @@ class MainFlutterWindow: NSWindow {
             PathProviderPlugin.register(with: controller.registrar(forPlugin: "PathProviderPlugin"))
             SqflitePlugin.register(with: controller.registrar(forPlugin: "SqflitePlugin"))
             // TrayManagerPlugin.register(with: controller.registrar(forPlugin: "TrayManagerPlugin"))
-            UniLinksDesktopPlugin.register(with: controller.registrar(forPlugin: "UniLinksDesktopPlugin"))
             UrlLauncherPlugin.register(with: controller.registrar(forPlugin: "UrlLauncherPlugin"))
             WakelockPlusMacosPlugin.register(with: controller.registrar(forPlugin: "WakelockPlusMacosPlugin"))
             WindowSizePlugin.register(with: controller.registrar(forPlugin: "WindowSizePlugin"))

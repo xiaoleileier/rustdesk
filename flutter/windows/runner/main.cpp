@@ -1,7 +1,6 @@
 #include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
 #include <tchar.h>
-#include <uni_links_desktop/uni_links_desktop_plugin.h>
 #include <windows.h>
 
 #include <algorithm>
@@ -86,15 +85,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                     whitelist_param) != command_line_arguments.end();
     }
     if (!allow_multiple_instances) {
-      if (!command_line_arguments.empty()) {
-        // Dispatch command line arguments
-        DispatchToUniLinksDesktop(hwnd);
-      } else {
-        // Not called with arguments, or just open the app shortcut on desktop.
-        // So we just show the main window instead.
-        ::ShowWindow(hwnd, SW_NORMAL);
-        ::SetForegroundWindow(hwnd);
-      }
+      // Another instance is already running. Deep-link arg forwarding via
+      // uni_links_desktop was dropped in favor of app_links, so just bring the
+      // existing main window to the foreground.
+      ::ShowWindow(hwnd, SW_NORMAL);
+      ::SetForegroundWindow(hwnd);
       return EXIT_FAILURE;
     }
   }
