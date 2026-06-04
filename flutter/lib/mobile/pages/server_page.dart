@@ -210,6 +210,7 @@ class _ServerPageState extends State<ServerPage> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         buildPresetPasswordWarningMobile(),
+                        if (!gFFI.serverModel.isStart) const ControlledGuide(),
                         gFFI.serverModel.isStart
                             ? ServerInfo()
                             : ServiceNotRunningNotification(),
@@ -263,6 +264,44 @@ class ServiceNotRunningNotification extends StatelessWidget {
                   }
                 },
                 label: Text(translate("Start service")))
+          ],
+        ));
+  }
+}
+
+// Onboarding guidance shown on the controlled side before the service starts.
+class ControlledGuide extends StatelessWidget {
+  const ControlledGuide({Key? key}) : super(key: key);
+
+  Widget _step(String n, String text) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+                radius: 11,
+                backgroundColor: MyTheme.accent,
+                child: Text(n,
+                    style: const TextStyle(color: Colors.white, fontSize: 12))),
+            const SizedBox(width: 10),
+            Expanded(
+                child: Text(text, style: const TextStyle(fontSize: 14))
+                    .marginOnly(top: 1)),
+          ],
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return PaddingCard(
+        title: "使用步骤",
+        titleIcon: const Icon(Icons.lightbulb_outline, color: MyTheme.accent),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _step("1", "在下方「权限」中开启『输入控制』(无障碍)权限"),
+            _step("2", "点击下方『启动服务』按钮"),
+            _step("3", "把上方出现的 ID 和一次性密码发送给客服,即可被远程协助"),
           ],
         ));
   }
