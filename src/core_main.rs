@@ -29,8 +29,6 @@ macro_rules! my_println{
 /// If it returns [`Some`], then the process will continue, and flutter gui will be started.
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn core_main() -> Option<Vec<String>> {
-    // Rebrand: set the app name before anything reads config paths / log dir / title.
-    *hbb_common::config::APP_NAME.write().unwrap() = "gfyc".to_owned();
     if !crate::common::global_init() {
         return None;
     }

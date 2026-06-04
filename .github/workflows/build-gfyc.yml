@@ -82,9 +82,9 @@ jobs:
           pushd flutter && flutter build macos --release && popd
           # Build a .dmg with a drag-to-Applications shortcut (hdiutil, no extra tools).
           rm -rf dmgroot && mkdir -p dmgroot
-          cp -R "flutter/build/macos/Build/Products/Release/gfyc.app" dmgroot/
+          cp -R "flutter/build/macos/Build/Products/Release/RustDesk.app" dmgroot/
           ln -s /Applications dmgroot/Applications
-          hdiutil create -volname "gfyc" -srcfolder dmgroot -ov -format UDZO gfyc-macos-universal.dmg
+          hdiutil create -volname "RustDesk" -srcfolder dmgroot -ov -format UDZO gfyc-macos-universal.dmg
       - uses: actions/upload-artifact@v4
         with:
           name: gfyc-macos-universal

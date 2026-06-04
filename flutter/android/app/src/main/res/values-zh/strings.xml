@@ -1,4 +1,0 @@
-<resources>
-    <string name="app_name">官方远程</string>
-    <string name="accessibility_service_description">当建立官方远程屏幕共享时，允许其他设备通过虚拟触控控制你的手机。</string>
-</resources>

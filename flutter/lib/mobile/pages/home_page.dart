@@ -43,6 +43,11 @@ class HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     initPages();
+    // Controlled-only (incoming) build: open on the ServerPage (ID + one-time
+    // password) instead of the chat tab.
+    if (bind.isIncomingOnly() && isAndroid && !bind.isOutgoingOnly()) {
+      _selectedIndex = _chatPageTabIndex + 1; // ServerPage is right after ChatPage
+    }
   }
 
   void initPages() {

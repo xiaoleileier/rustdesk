@@ -2,7 +2,7 @@ lazy_static::lazy_static! {
 pub static ref T: std::collections::HashMap<&'static str, &'static str> =
     [
         ("desk_tip", "Your desktop can be accessed with this ID and password."),
-        ("connecting_status", "Connecting to the gfyc network..."),
+        ("connecting_status", "Connecting to the RustDesk network..."),
         ("not_ready_status", "Not ready. Please check your connection"),
         ("ID/Relay Server", "ID/Relay server"),
         ("id_change_tip", "Only a-z, A-Z, 0-9, - (dash) and _ (underscore) characters allowed. The first letter must be a-z, A-Z. Length between 6 and 16."),
@@ -34,8 +34,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Set Password", "Set password"),
         ("OS Password", "OS password"),
         ("install_tip", "Due to UAC, RustDesk can not work properly as the remote side in some cases. To avoid UAC, please click the button below to install RustDesk to the system."),
-        ("config_acc", "In order to control your Desktop remotely, you need to grant gfyc \"Accessibility\" permissions."),
-        ("config_screen", "In order to access your Desktop remotely, you need to grant gfyc \"Screen Recording\" permissions."),
+        ("config_acc", "In order to control your Desktop remotely, you need to grant RustDesk \"Accessibility\" permissions."),
+        ("config_screen", "In order to access your Desktop remotely, you need to grant RustDesk \"Screen Recording\" permissions."),
         ("Installation Path", "Installation path"),
         ("agreement_tip", "By starting the installation, you accept the license agreement."),
         ("Accept and Install", "Accept and install"),
@@ -129,7 +129,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("hide_cm_tip", "Allow hiding only if accepting sessions via password and using permanent password"),
         ("wayland_experiment_tip", "Wayland support is in experimental stage, please use X11 if you require unattended access."),
         ("software_render_tip", "If you're using Nvidia graphics card under Linux and the remote window closes immediately after connecting, switching to the open-source Nouveau driver and choosing to use software rendering may help. A software restart is required."),
-        ("config_input", "In order to control remote desktop with keyboard, you need to grant gfyc \"Input Monitoring\" permissions."),
+        ("config_input", "In order to control remote desktop with keyboard, you need to grant RustDesk \"Input Monitoring\" permissions."),
         ("config_microphone", "In order to speak remotely, you need to grant RustDesk \"Record Audio\" permissions."),
         ("request_elevation_tip", "You can also request elevation if there is someone on the remote side."),
         ("Elevation Error", "Elevation error"),
