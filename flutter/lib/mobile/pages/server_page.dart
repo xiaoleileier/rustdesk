@@ -255,13 +255,7 @@ class ServiceNotRunningNotification extends StatelessWidget {
             ElevatedButton.icon(
                 icon: const Icon(Icons.play_arrow),
                 onPressed: () {
-                  if (gFFI.userModel.userName.value.isEmpty &&
-                      bind.mainGetLocalOption(key: "show-scam-warning") !=
-                          "N") {
-                    showScamWarning(context, serverModel);
-                  } else {
-                    serverModel.toggleService();
-                  }
+                  serverModel.toggleService();
                 },
                 label: Text(translate("Start service")))
           ],
@@ -301,7 +295,7 @@ class ControlledGuide extends StatelessWidget {
           children: [
             _step("1", "在下方「权限」中开启『输入控制』(无障碍)权限"),
             _step("2", "点击下方『启动服务』按钮"),
-            _step("3", "把上方出现的 ID 和一次性密码发送给客服,即可被远程协助"),
+            _step("3", "把上方出现的 ID 发送给客服，即可开始远程协助"),
           ],
         ));
   }
@@ -573,37 +567,7 @@ class ServerInfo extends StatelessWidget {
                   onPressed: () {
                     copyToClipboard(model.serverId.value.text.trim());
                   })
-            ]).marginOnly(left: 39, bottom: 10),
-            // Password
-            Row(children: [
-              const Icon(Icons.lock_outline, color: Colors.grey, size: iconSize)
-                  .marginOnly(right: iconMarginRight),
-              Text(
-                translate('One-time Password'),
-                style: textStyleHeading,
-              )
-            ]),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text(
-                !showOneTime ? '-' : model.serverPasswd.value.text,
-                style: textStyleValue,
-              ),
-              !showOneTime
-                  ? SizedBox.shrink()
-                  : Row(children: [
-                      IconButton(
-                          visualDensity: VisualDensity.compact,
-                          icon: const Icon(Icons.refresh),
-                          onPressed: () => bind.mainUpdateTemporaryPassword()),
-                      IconButton(
-                          visualDensity: VisualDensity.compact,
-                          icon: Icon(Icons.copy_outlined),
-                          onPressed: () {
-                            copyToClipboard(
-                                model.serverPasswd.value.text.trim());
-                          })
-                    ])
-            ]).marginOnly(left: 40, bottom: 15),
+            ]).marginOnly(left: 39, bottom: 15),
             ConnectionStateNotification()
           ],
         ));

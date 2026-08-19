@@ -914,19 +914,7 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
               ),
             ],
           ),
-        if (isAndroid &&
-            !disabledSettings &&
-            !outgoingOnly &&
-            !hideSecuritySettings)
-          SettingsSection(title: Text('2FA'), tiles: tfaTiles),
-        if (isAndroid &&
-            !disabledSettings &&
-            !outgoingOnly &&
-            !hideSecuritySettings)
-          SettingsSection(
-            title: Text(translate("Share screen")),
-            tiles: shareScreenTiles,
-          ),
+
         if (!bind.isIncomingOnly()) defaultDisplaySection(),
         if (isAndroid &&
             !disabledSettings &&

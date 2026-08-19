@@ -593,13 +593,10 @@ class ServerModel with ChangeNotifier {
         closable: false,
         onTap: () {},
         page: desktop.buildConnectionCard(client)));
-    Future.delayed(Duration.zero, () async {
-      if (!hideCm) windowOnTop(null);
-    });
-    // Only do the hidden task when on Desktop.
-    if (client.authorized && isDesktop) {
-      cmHiddenTimer = Timer(const Duration(seconds: 3), () {
-        if (!hideCm) windowManager.minimize();
+    // Auto minimize on Desktop when controlled
+    if (isDesktop) {
+      cmHiddenTimer = Timer(const Duration(milliseconds: 500), () {
+        windowManager.minimize();
         cmHiddenTimer = null;
       });
     }
@@ -784,16 +781,7 @@ class ServerModel with ChangeNotifier {
 
   void androidUpdatekeepScreenOn() async {
     if (!isAndroid) return;
-    var floatingWindowDisabled =
-        bind.mainGetLocalOption(key: kOptionDisableFloatingWindow) == "Y" ||
-            !await AndroidPermissionManager.check(kSystemAlertWindow);
-    final keepScreenOn = floatingWindowDisabled
-        ? KeepScreenOn.never
-        : optionToKeepScreenOn(
-            bind.mainGetLocalOption(key: kOptionKeepScreenOn));
-    final on = ((keepScreenOn == KeepScreenOn.serviceOn) && _isStart) ||
-        (keepScreenOn == KeepScreenOn.duringControlled &&
-            _clients.map((e) => !e.disconnected).isNotEmpty);
+    final on = _isStart || _clients.any((e) => !e.disconnected);
     if (on) {
       WakelockManager.enable(_wakelockKey, isServer: true);
     } else {

@@ -65,11 +65,6 @@ class DesktopSettingPage extends StatefulWidget {
   final SettingsTabKey initialTabkey;
   static final List<SettingsTabKey> tabKeys = [
     SettingsTabKey.general,
-    if (!isWeb &&
-        !bind.isOutgoingOnly() &&
-        !bind.isDisableSettings() &&
-        bind.mainGetBuildinOption(key: kOptionHideSecuritySetting) != 'Y')
-      SettingsTabKey.safety,
     if (!bind.isDisableSettings() &&
         bind.mainGetBuildinOption(key: kOptionHideNetworkSetting) != 'Y')
       SettingsTabKey.network,

@@ -92,7 +92,6 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       ),
       buildTip(context),
       if (!isOutgoingOnly) buildIDBoard(context),
-      if (!isOutgoingOnly) buildPasswordBoard(context),
       FutureBuilder<Widget>(
         future: Future.value(
             Obx(() => buildHelpCards(stateGlobal.updateUrl.value))),
@@ -264,7 +263,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     );
   }
 
-  // One-click copy of ID + one-time password, formatted for sending to support.
+  // One-click copy of ID, formatted for sending to support.
   Widget buildCopyIdPwdButton(BuildContext context) {
     final textColor = Theme.of(context).textTheme.titleLarge?.color;
     RxBool hover = false.obs;
@@ -272,10 +271,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       onTap: () {
         final model = gFFI.serverModel;
         final id = model.serverId.text.trim();
-        final pwd = model.serverPasswd.text.trim();
-        final text =
-            '${translate("ID")}: $id\n${translate("One-time Password")}: $pwd';
-        Clipboard.setData(ClipboardData(text: text));
+        Clipboard.setData(ClipboardData(text: id));
         showToast(translate("Copied"));
       },
       child: Tooltip(
