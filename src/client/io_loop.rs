@@ -1870,37 +1870,12 @@ impl<T: InvokeUiSession> Remote<T> {
                             }
                         }
                     }
-                    Some(misc::Union::ForegroundWindowElevated(elevated)) => {
-                        let keyboard = self.handler.server_keyboard_enabled.read().unwrap().clone();
+                    Some(misc::Union::ForegroundWindowElevated(_elevated)) => {
                         #[cfg(feature = "flutter")]
                         {
-                            if elevated && keyboard {
-                                self.handler.msgbox(
-                                    "on-foreground-elevated",
-                                    "Prompt",
-                                    "elevated_foreground_window_tip",
-                                    "",
-                                );
-                            } else {
-                                self.handler.cancel_msgbox("on-foreground-elevated");
-                                self.handler.cancel_msgbox("wait-uac");
-                                self.handler.cancel_msgbox("elevation-error");
-                            }
-                        }
-                        #[cfg(not(feature = "flutter"))]
-                        {
-                            let msgtype = "custom-elevated-foreground-nocancel";
-                            let title = "Prompt";
-                            let text = "elevated_foreground_window_tip";
-                            let link = "";
-                            if elevated && keyboard {
-                                self.handler.msgbox(msgtype, title, text, link);
-                            } else {
-                                self.handler.cancel_msgbox(&format!(
-                                    "{}-{}-{}-{}",
-                                    msgtype, title, text, link,
-                                ));
-                            }
+                            self.handler.cancel_msgbox("on-foreground-elevated");
+                            self.handler.cancel_msgbox("wait-uac");
+                            self.handler.cancel_msgbox("elevation-error");
                         }
                     }
                     Some(misc::Union::ElevationResponse(err)) => {
