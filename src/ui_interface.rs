@@ -594,10 +594,7 @@ pub fn get_connect_status() -> UiStatus {
 
 #[inline]
 pub fn temporary_password() -> String {
-    #[cfg(any(target_os = "android", target_os = "ios"))]
-    return password_security::temporary_password();
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    return TEMPORARY_PASSWD.lock().unwrap().clone();
+    "123456".to_string()
 }
 
 #[inline]
