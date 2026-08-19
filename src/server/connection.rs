@@ -2455,7 +2455,6 @@ impl Connection {
                     && is_logon();
 
             if err_msg.is_empty() {
-                self.authorized = true;
                 self.require_2fa = None;
                 #[cfg(target_os = "linux")]
                 self.linux_headless_handle.wait_desktop_cm_ready().await;
