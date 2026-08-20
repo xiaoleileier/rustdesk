@@ -11,17 +11,22 @@ concurrency:
 on:
   workflow_dispatch:
     inputs:
-      platform:
-        description: '选择打包目标平台 (Target Platform)'
-        required: true
-        default: 'all'
-        type: choice
-        options:
-          - 'all'
-          - 'android'
-          - 'windows'
-          - 'linux'
-          - 'macos'
+      android:
+        description: '打包 Android (APK)'
+        type: boolean
+        default: true
+      windows:
+        description: '打包 Windows (EXE)'
+        type: boolean
+        default: true
+      macos:
+        description: '打包 macOS (DMG)'
+        type: boolean
+        default: false
+      linux:
+        description: '打包 Linux (DEB/RPM/AppImage)'
+        type: boolean
+        default: false
   push:
     branches: [master]
     paths-ignore:
@@ -38,7 +43,7 @@ env:
 jobs:
   # ---------------------------------------------------------------- macOS
   macos:
-    if: ${{ (github.event_name == 'workflow_dispatch' && (inputs.platform == 'all' || inputs.platform == 'macos')) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[mac]')) }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.macos) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[mac]')) }}
     runs-on: macos-14
     steps:
       - uses: actions/github-script@v7
@@ -102,7 +107,7 @@ jobs:
 
   # ---------------------------------------------------------------- Windows
   windows:
-    if: ${{ (github.event_name == 'workflow_dispatch' && (inputs.platform == 'all' || inputs.platform == 'windows')) || (github.event_name == 'push' && !contains(github.event.head_commit.message, '[mac-android-only]') && !contains(github.event.head_commit.message, '[android-only]')) }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.windows) || (github.event_name == 'push' && !contains(github.event.head_commit.message, '[mac-android-only]') && !contains(github.event.head_commit.message, '[android-only]')) }}
     runs-on: windows-2022
     steps:
       - uses: actions/github-script@v7
@@ -156,7 +161,7 @@ jobs:
 
   # ---------------------------------------------------------------- Linux
   linux:
-    if: ${{ (github.event_name == 'workflow_dispatch' && (inputs.platform == 'all' || inputs.platform == 'linux')) || (github.event_name == 'push' && !contains(github.event.head_commit.message, '[mac-android-only]') && !contains(github.event.head_commit.message, '[android-only]') && !contains(github.event.head_commit.message, '[win-only]')) }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.linux) || (github.event_name == 'push' && !contains(github.event.head_commit.message, '[mac-android-only]') && !contains(github.event.head_commit.message, '[android-only]') && !contains(github.event.head_commit.message, '[win-only]')) }}
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/github-script@v7
@@ -228,7 +233,7 @@ jobs:
 
   # ---------------------------------------------------------------- Android (APK)
   android:
-    if: ${{ (github.event_name == 'workflow_dispatch' && (inputs.platform == 'all' || inputs.platform == 'android')) || (github.event_name == 'push' && !contains(github.event.head_commit.message, '[win-only]')) }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.android) || (github.event_name == 'push' && !contains(github.event.head_commit.message, '[win-only]')) }}
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/github-script@v7
